@@ -1,0 +1,2229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tinta & Tela | Personalizador de Remeras</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        };
+    </script>
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, .font-display {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        /* Patrón de cuadrícula sutil para el estudio de diseño */
+        .studio-grid {
+            background-color: #f1f5f9;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .dark .studio-grid {
+            background-color: #0f172a;
+            background-image: radial-gradient(#1e293b 1px, transparent 1px);
+        }
+        /* Evitar selección de texto al arrastrar en el canvas */
+        .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200">
+
+    <!-- Navbar Minimalista Indie -->
+    <header class="bg-white/95 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <!-- Contenedor dinámico para Logo personalizado o Ícono por defecto -->
+                <div id="brand-logo-container" class="w-10 h-10 bg-slate-900 dark:bg-slate-800 text-white rounded-xl flex items-center justify-center shadow-sm overflow-hidden shrink-0 border border-transparent dark:border-slate-700">
+                    <i data-lucide="shirt" class="w-5 h-5"></i>
+                </div>
+                <div class="min-w-0">
+                    <span id="brand-name-display" class="font-display font-extrabold text-lg tracking-tight text-slate-900 dark:text-white block leading-none truncate">TINTA & TELA</span>
+                    <span id="brand-subtitle-display" class="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest block truncate mt-0.5">Taller de Estampados</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="hidden lg:flex items-center gap-5 text-sm font-medium text-slate-600 dark:text-slate-300 mr-2">
+                    <span class="flex items-center gap-1.5"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i> Algodón Peinado 24/1</span>
+                    <span class="flex items-center gap-1.5"><i data-lucide="truck" class="w-4 h-4 text-slate-900 dark:text-slate-200"></i> Envíos a todo el país</span>
+                </div>
+
+                <!-- Botón Toggle Modo Oscuro / Modo Claro -->
+                <button type="button" id="theme-toggle-btn" onclick="toggleTheme()" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-900 dark:hover:border-slate-500 bg-slate-50 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition flex items-center gap-1.5 shrink-0" title="Cambiar entre modo claro y oscuro">
+                    <i id="theme-toggle-icon" data-lucide="moon" class="w-4 h-4 text-amber-500"></i>
+                    <span id="theme-toggle-label" class="hidden sm:inline">Modo Oscuro</span>
+                </button>
+
+                <!-- Botón Discreto Solo Visible para Dueño o Moderador Autenticado -->
+                <button type="button" id="admin-config-btn" onclick="openAdminModal()" class="hidden px-3 py-2 rounded-xl border border-emerald-300 dark:border-emerald-700 hover:border-emerald-600 dark:hover:border-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200 text-xs font-semibold transition flex items-center gap-1.5 shrink-0" title="Configurar logo, precios y WhatsApp">
+                    <i data-lucide="settings" class="w-4 h-4 text-emerald-700 dark:text-emerald-400"></i>
+                    <span class="hidden sm:inline">Configurar Tienda</span>
+                </button>
+
+                <!-- Botón Cerrar Sesión de Moderador / Dueño (Solo visible cuando está desbloqueado) -->
+                <button type="button" id="staff-logout-btn" onclick="lockStaffSession()" class="hidden px-2.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-rose-400 dark:hover:border-rose-700 bg-slate-50 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold transition flex items-center gap-1 shrink-0" title="Bloquear vista de dueño/moderador">
+                    <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                    <span class="hidden md:inline">Bloquear</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Notificación Flotante (Toast) -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="bg-slate-900 dark:bg-slate-800 text-white border border-slate-700 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 text-sm font-medium">
+            <i data-lucide="info" class="w-5 h-5 text-amber-400 shrink-0"></i>
+            <span id="toast-message">Mensaje</span>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+            <!-- COLUMNA IZQUIERDA: Vista Previa Realista e Interactiva (7 columnas en desktop) -->
+            <div class="lg:col-span-7 flex flex-col gap-4 lg:sticky lg:top-24">
+                
+                <!-- Barra Superior del Visor: Frente / Espalda, Fondo y Guía -->
+                <div class="bg-white dark:bg-slate-900 p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-2 transition-colors">
+                    <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                        <button id="btn-view-front" onclick="switchSide('front')" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm flex items-center gap-2">
+                            <i data-lucide="user" class="w-4 h-4"></i> Frente
+                        </button>
+                        <button id="btn-view-back" onclick="switchSide('back')" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2">
+                            <i data-lucide="repeat" class="w-4 h-4"></i> Espalda
+                        </button>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2 sm:gap-3 px-2">
+                        <button type="button" id="btn-toggle-bg" onclick="toggleStudioBackground()" class="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-slate-900 dark:hover:border-slate-500 bg-amber-50/70 dark:bg-amber-950/40 hover:bg-amber-50 dark:hover:bg-amber-900/50 text-amber-950 dark:text-amber-200 text-xs font-semibold transition flex items-center gap-1.5" title="Cambiar fondo del estudio">
+                            <i data-lucide="layers" class="w-3.5 h-3.5 text-amber-800 dark:text-amber-400"></i>
+                            <span id="bg-mode-label">Mesa de Madera</span>
+                        </button>
+                        <label class="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+                            <input type="checkbox" id="toggle-guides" checked onchange="renderCanvas()" class="rounded text-slate-900 dark:bg-slate-800 dark:border-slate-600 focus:ring-slate-900">
+                            <span>Guías</span>
+                        </label>
+                        <span id="design-status-badge" class="hidden sm:inline-block text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                            Sin diseño en Frente
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Contenedor del Lienzo (Canvas Interactivo) -->
+                <div id="canvas-wrapper" class="studio-grid relative w-full aspect-[4/4.4] sm:aspect-[4/3.9] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-inner overflow-hidden flex items-center justify-center no-select transition-colors">
+                    <canvas id="tshirt-canvas" class="w-full h-full cursor-default touch-none"></canvas>
+                    
+                    <!-- Ayuda flotante cuando hay imagen -->
+                    <div id="canvas-hint" class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 bg-slate-900/85 dark:bg-slate-950/90 backdrop-blur-sm text-white border border-white/10 px-3.5 py-1.5 rounded-full text-[11px] font-medium shadow-md pointer-events-none flex items-center gap-1.5 whitespace-nowrap">
+                        <i data-lucide="hand" class="w-3.5 h-3.5 text-amber-300"></i> Tocá y arrastrá esquinas para escalar o el círculo superior para rotar
+                    </div>
+                </div>
+
+                <!-- Barra Minimalista de Acciones Rápidas de Diseño (Sin Sliders) -->
+                <div id="design-controls-panel" class="hidden bg-white dark:bg-slate-900 px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <h3 class="font-display font-bold text-xs sm:text-sm text-slate-900 dark:text-white">
+                                Edición Directa (<span id="current-side-label">Frente</span>)
+                            </h3>
+                            <span id="transform-readout" class="text-[11px] font-mono text-slate-500 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">75% · 0°</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 sm:gap-2">
+                            <button type="button" onclick="centerDesign()" class="px-3 py-1.5 text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl transition flex items-center gap-1.5" title="Centrar diseño en el pecho/espalda">
+                                <i data-lucide="align-center-vertical" class="w-3.5 h-3.5"></i> Centrar
+                            </button>
+                            <button type="button" onclick="resetRotation()" class="px-3 py-1.5 text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl transition flex items-center gap-1.5" title="Enderezar ángulo a 0°">
+                                <i data-lucide="compass" class="w-3.5 h-3.5"></i> Enderezar (0°)
+                            </button>
+                            <button type="button" onclick="removeDesign()" class="px-3 py-1.5 text-xs font-semibold bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 rounded-xl transition flex items-center gap-1.5" title="Eliminar diseño">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Quitar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA: Configurador y Presupuesto (5 columnas en desktop) -->
+            <div class="lg:col-span-5 flex flex-col gap-5">
+
+                <!-- PASO 1: Color de la Remera -->
+                <section class="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="font-display font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs flex items-center justify-center font-bold">1</span>
+                            Color de la Remera
+                        </h2>
+                        <span id="selected-color-name" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200">Azul Intenso</span>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <!-- Swatches generados por JS -->
+                        <div id="color-swatches" class="flex flex-wrap items-center gap-2.5"></div>
+
+                        <!-- Selector Personalizado -->
+                        <label class="relative w-10 h-10 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-slate-500 dark:hover:border-slate-400 flex items-center justify-center cursor-pointer transition overflow-hidden group" title="Elegir otro color">
+                            <input type="color" id="custom-color-picker" value="#6366f1" onchange="selectCustomColor(this.value)" class="opacity-0 absolute inset-0 w-full h-full cursor-pointer">
+                            <i data-lucide="pipette" class="w-4 h-4 text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform"></i>
+                        </label>
+                    </div>
+                </section>
+
+                <!-- PASO 2: Subir Imagen -->
+                <section class="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="font-display font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs flex items-center justify-center font-bold">2</span>
+                            Subí tu Diseño
+                        </h2>
+                        <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">PNG, JPG o SVG</span>
+                    </div>
+
+                    <!-- Zona Drag & Drop -->
+                    <div id="drop-zone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-slate-900 dark:hover:border-slate-400 bg-slate-50/70 dark:bg-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl p-6 text-center transition-all cursor-pointer group">
+                        <input type="file" id="file-input" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+                        <div class="w-12 h-12 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform">
+                            <i data-lucide="upload-cloud" class="w-6 h-6 text-slate-700 dark:text-slate-200"></i>
+                        </div>
+                        <p class="text-sm font-semibold text-slate-800 dark:text-slate-100">Hacé clic o arrastrá tu imagen acá</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Se aplicará en el lado activo (<strong id="dropzone-side-text" class="text-slate-700 dark:text-slate-200">Frente</strong>). Recomendamos fondo transparente.</p>
+                    </div>
+                </section>
+
+                <!-- PASO 3: Talle y Cantidad (Sin selector de tipo de estampado) -->
+                <section class="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-5 transition-colors">
+                    <h2 class="font-display font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs flex items-center justify-center font-bold">3</span>
+                        Detalles del Pedido
+                    </h2>
+
+                    <!-- Selector de Talle -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                Talle <span id="xl-surcharge-hint" class="text-[11px] font-normal normal-case text-slate-400 dark:text-slate-500"></span>
+                            </label>
+                            <button type="button" onclick="openSizeGuide()" class="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white underline">Tabla de medidas</button>
+                        </div>
+                        <div class="grid grid-cols-5 gap-2" id="size-selector">
+                            <button type="button" onclick="selectSize('S')" data-size="S" class="size-btn py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-500 transition">S</button>
+                            <button type="button" onclick="selectSize('M')" data-size="M" class="size-btn py-2.5 rounded-xl border-2 border-slate-900 dark:border-white bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold transition">M</button>
+                            <button type="button" onclick="selectSize('L')" data-size="L" class="size-btn py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-500 transition">L</button>
+                            <button type="button" onclick="selectSize('XL')" data-size="XL" class="size-btn py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-500 transition">XL</button>
+                            <button type="button" onclick="selectSize('XXL')" data-size="XXL" class="size-btn py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-500 transition">XXL</button>
+                        </div>
+                    </div>
+
+                    <!-- Cantidad y Resumen de Precio en Tiempo Real -->
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                        <div>
+                            <span class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Cantidad</span>
+                            <div class="inline-flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+                                <button type="button" onclick="changeQuantity(-1)" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 text-slate-700 dark:text-white font-bold shadow-sm hover:bg-slate-50 dark:hover:bg-slate-600 flex items-center justify-center">-</button>
+                                <span id="quantity-display" class="w-10 text-center font-bold text-sm text-slate-900 dark:text-white">1</span>
+                                <button type="button" onclick="changeQuantity(1)" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 text-slate-700 dark:text-white font-bold shadow-sm hover:bg-slate-50 dark:hover:bg-slate-600 flex items-center justify-center">+</button>
+                            </div>
+                        </div>
+
+                        <div class="text-right">
+                            <span class="block text-xs text-slate-500 dark:text-slate-400 font-medium">Total Estimado</span>
+                            <div class="font-display font-extrabold text-2xl sm:text-3xl text-slate-900 dark:text-white tracking-tight" id="total-price">
+                                $12.000
+                            </div>
+                            <span id="price-breakdown" class="block text-[11px] text-slate-500 dark:text-slate-400">$12.000 c/u · Sin estampa cargada</span>
+                        </div>
+                    </div>
+
+                    <!-- Aviso si el WhatsApp aún no fue configurado por el dueño -->
+                    <div id="whatsapp-unconfigured-banner" class="hidden bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/80 rounded-2xl p-3 flex items-center justify-between gap-2 text-xs text-amber-900 dark:text-amber-200">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="alert-circle" class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0"></i>
+                            <span>Falta configurar el WhatsApp del taller para recibir pedidos.</span>
+                        </div>
+                        <button type="button" id="wa-banner-config-btn" onclick="requestStaffAccess(() => openAdminModal())" class="font-bold underline text-amber-900 dark:text-amber-200 hover:text-amber-700 dark:hover:text-white shrink-0">Acceso Staff</button>
+                    </div>
+
+                    <!-- Botones de Acción Final: Directo a WhatsApp + Descarga de Muestra -->
+                    <div class="flex flex-col gap-2.5 pt-1">
+                        <button type="button" onclick="directOrderToWhatsApp()" class="w-full py-4 px-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-base shadow-lg shadow-emerald-600/25 transition flex items-center justify-center gap-2.5">
+                            <i data-lucide="message-circle" class="w-5 h-5"></i> Terminar y Pedir por WhatsApp
+                        </button>
+
+                        <button type="button" onclick="downloadMockup()" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-900 dark:hover:border-slate-500 bg-slate-50/70 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs transition flex items-center justify-center gap-2">
+                            <i data-lucide="download" class="w-4 h-4"></i> Descargar muestra para adjuntar en el chat
+                        </button>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL PANEL DE CONFIGURACIÓN DE LA TIENDA (MODO DUEÑO) -->
+    <div id="admin-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/65 dark:bg-black/75 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]">
+            <!-- Header Modal -->
+            <div class="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-800/60">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-slate-900 dark:bg-slate-700 text-white flex items-center justify-center">
+                        <i data-lucide="store" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Configuración del Emprendimiento</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Personalizá tu logo, precios en ARS y WhatsApp receptor</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeAdminModal()" class="w-9 h-9 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Cuerpo Scrollable del Formulario -->
+            <form id="admin-form" onsubmit="saveStoreSettings(event)" class="p-5 sm:p-6 overflow-y-auto flex flex-col gap-6">
+                
+                <!-- Sección 1: Identidad de Marca y Logo -->
+                <div class="bg-slate-50 dark:bg-slate-800/60 p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 flex flex-col gap-4">
+                    <h4 class="font-display font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                        <i data-lucide="image" class="w-4 h-4 text-slate-700 dark:text-slate-300"></i> Identidad y Logo de la Marca
+                    </h4>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Nombre del Emprendimiento</label>
+                            <input type="text" id="cfg-brand-name" required placeholder="Ej: Tinta & Tela" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:border-slate-900 dark:focus:border-slate-400">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Subtítulo / Bajada (Opcional)</label>
+                            <input type="text" id="cfg-brand-subtitle" placeholder="Ej: Taller de Estampados" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:border-slate-900 dark:focus:border-slate-400">
+                        </div>
+                    </div>
+
+                    <!-- Subida de Logo -->
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-2 border-t border-slate-200/70 dark:border-slate-700/70">
+                        <div class="flex items-center gap-3">
+                            <div id="cfg-logo-preview" class="w-12 h-12 rounded-xl bg-slate-900 dark:bg-slate-800 text-white flex items-center justify-center overflow-hidden border border-slate-300 dark:border-slate-600 shrink-0">
+                                <i data-lucide="shirt" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Logo del Emprendimiento</span>
+                                <span class="block text-[11px] text-slate-500 dark:text-slate-400">Se muestra en el encabezado (PNG/JPG cuadrado)</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <label class="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:border-slate-900 dark:hover:border-slate-400 text-xs font-bold text-slate-800 dark:text-slate-200 cursor-pointer transition flex items-center gap-1.5">
+                                <i data-lucide="upload" class="w-3.5 h-3.5"></i> Subir Logo
+                                <input type="file" id="cfg-logo-input" accept="image/*" onchange="handleLogoUpload(event)" class="hidden">
+                            </label>
+                            <button type="button" id="cfg-remove-logo-btn" onclick="removeCustomLogo()" class="hidden px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/70 text-rose-600 dark:text-rose-400 text-xs font-bold transition">
+                                Quitar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección 2: WhatsApp y Precios en ARS -->
+                <div class="bg-slate-50 dark:bg-slate-800/60 p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 flex flex-col gap-4">
+                    <h4 class="font-display font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                        <i data-lucide="tag" class="w-4 h-4 text-slate-700 dark:text-slate-300"></i> WhatsApp y Precios (ARS)
+                    </h4>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="sm:col-span-3">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">WhatsApp Receptor (con código de país, sin + ni espacios)</label>
+                            <input type="text" id="cfg-whatsapp" placeholder="Ej: 5491155551234" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm font-mono focus:outline-none focus:border-slate-900 dark:focus:border-slate-400">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Remera Base ($)</label>
+                            <input type="number" id="cfg-price-base" min="0" step="100" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm font-semibold focus:outline-none focus:border-slate-900 dark:focus:border-slate-400">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Estampa por Cara ($)</label>
+                            <input type="number" id="cfg-price-print" min="0" step="100" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm font-semibold focus:outline-none focus:border-slate-900 dark:focus:border-slate-400">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Recargo XL / XXL ($)</label>
+                            <input type="number" id="cfg-price-xl" min="0" step="100" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm font-semibold focus:outline-none focus:border-slate-900 dark:focus:border-slate-400">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-200/70 dark:border-slate-700/70">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Cant. Desc. 1</label>
+                            <input type="number" id="cfg-disc1-qty" min="2" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">% Desc. 1</label>
+                            <input type="number" id="cfg-disc1-pct" min="0" max="90" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Cant. Desc. 2</label>
+                            <input type="number" id="cfg-disc2-qty" min="2" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">% Desc. 2</label>
+                            <input type="number" id="cfg-disc2-pct" min="0" max="90" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm font-semibold">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección 4: Seguridad / Clave de Dueño y Moderadores -->
+                <div class="bg-amber-50/60 dark:bg-amber-950/25 p-4 sm:p-5 rounded-2xl border border-amber-200/80 dark:border-amber-800/60 flex flex-col gap-3">
+                    <h4 class="font-display font-bold text-sm text-amber-950 dark:text-amber-200 flex items-center gap-2">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-amber-700 dark:text-amber-400"></i> Acceso Dueño / Moderadores
+                    </h4>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Clave compartida para Dueño y Moderadores</label>
+                        <input type="text" id="cfg-staff-passcode" required minlength="4" placeholder="Ej: 1234" class="w-full px-3.5 py-2.5 rounded-xl border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm font-mono font-semibold focus:outline-none focus:border-amber-700 dark:focus:border-amber-400">
+                        <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-1.5">
+                            Los clientes no ven las opciones de configuración. Para entrar vos o un moderador, abrí la consola o usá <code class="bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded border dark:border-slate-700">abrirStaff()</code> / <code class="bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded border dark:border-slate-700">#staff</code> e ingresá esta clave.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Botones Footer Modal -->
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" onclick="resetStoreDefaults()" class="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 hover:border-rose-400 dark:hover:border-rose-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 transition">
+                        Restaurar por defecto
+                    </button>
+                    <div class="flex items-center gap-2.5">
+                        <button type="button" onclick="closeAdminModal()" class="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="px-6 py-2.5 rounded-xl bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-bold shadow-md transition flex items-center gap-2">
+                            <i data-lucide="save" class="w-4 h-4"></i> Guardar Cambios
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL LOGIN DUEÑO / MODERADOR -->
+    <div id="staff-login-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/65 dark:bg-black/75 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-800/60">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-slate-900 dark:bg-slate-700 text-white flex items-center justify-center">
+                        <i data-lucide="key-round" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-display font-bold text-base text-slate-900 dark:text-white">Acceso Dueño / Moderador</h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Ingresá tu clave para administrar la tienda</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeStaffLoginModal()" class="w-8 h-8 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <form id="staff-login-form" onsubmit="submitStaffLogin(event)" class="p-5 flex flex-col gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Clave de acceso</label>
+                    <input type="password" id="staff-passcode-input" required placeholder="Ingresá la clave..." autocomplete="current-password" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-sm font-mono focus:outline-none focus:border-slate-900 dark:focus:border-slate-400">
+                    <p id="staff-login-error" class="hidden text-xs font-semibold text-rose-600 dark:text-rose-400 mt-1.5">Clave incorrecta. Intentá nuevamente.</p>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-1">
+                    <button type="button" onclick="closeStaffLoginModal()" class="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-bold shadow-sm transition">
+                        Desbloquear
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL AVISO WHATSAPP NO CONFIGURADO -->
+    <div id="wa-alert-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/65 dark:bg-black/75 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <i data-lucide="message-square-warning" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="font-display font-bold text-base text-slate-900 dark:text-white">Número de WhatsApp pendiente</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">El dueño de la tienda aún no cargó su teléfono receptor.</p>
+                </div>
+            </div>
+
+            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Podés ingresar el número de WhatsApp del emprendimiento ahora para dirigir el pedido directamente al chat, o abrir WhatsApp Web con el mensaje listo para elegir un contacto.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-2.5 pt-2">
+                <button type="button" onclick="closeWaAlertModal(); requestStaffAccess(() => openAdminModal());" class="flex-1 py-3 px-4 rounded-xl bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs transition flex items-center justify-center gap-1.5">
+                    <i data-lucide="key-round" class="w-4 h-4"></i> Acceso Dueño / Mod
+                </button>
+                <button type="button" onclick="closeWaAlertModal(); openWhatsAppGenericShare();" class="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center justify-center gap-1.5">
+                    <i data-lucide="external-link" class="w-4 h-4"></i> Abrir WhatsApp igual
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TABLA DE TALLES -->
+    <div id="size-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 dark:bg-black/75 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <h3 class="font-display font-bold text-base text-slate-900 dark:text-white">Guía de Talles (Corte Unisex)</h3>
+                <button onclick="closeSizeGuide()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div class="p-5">
+                <table class="w-full text-sm text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 dark:border-slate-700 text-xs uppercase text-slate-500 dark:text-slate-400">
+                            <th class="py-2">Talle</th>
+                            <th class="py-2">Ancho (Axila)</th>
+                            <th class="py-2">Largo Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200 font-medium">
+                        <tr><td class="py-2.5 font-bold">S</td><td>49 cm</td><td>68 cm</td></tr>
+                        <tr><td class="py-2.5 font-bold">M</td><td>52 cm</td><td>71 cm</td></tr>
+                        <tr><td class="py-2.5 font-bold">L</td><td>55 cm</td><td>74 cm</td></tr>
+                        <tr><td class="py-2.5 font-bold">XL</td><td>58 cm</td><td>77 cm</td></tr>
+                        <tr><td class="py-2.5 font-bold">XXL</td><td>61 cm</td><td>80 cm</td></tr>
+                    </tbody>
+                </table>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-4">* Medidas aproximadas en centímetros tomadas sobre la prenda plana.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Inicializar iconos de Lucide
+        lucide.createIcons();
+
+        // --- GESTIÓN DE MODO OSCURO / CLARO ---
+        const THEME_STORAGE_KEY = 'tinta_tela_theme_mode';
+
+        function initTheme() {
+            const saved = localStorage.getItem(THEME_STORAGE_KEY);
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = saved ? saved === 'dark' : prefersDark;
+            applyTheme(isDark, false);
+        }
+
+        function applyTheme(isDark, shouldRenderCanvas = true) {
+            const html = document.documentElement;
+            if (isDark) {
+                html.classList.add('dark');
+            } else {
+                html.classList.remove('dark');
+            }
+
+            const iconEl = document.getElementById('theme-toggle-icon');
+            const labelEl = document.getElementById('theme-toggle-label');
+            if (iconEl && labelEl) {
+                iconEl.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+                labelEl.textContent = isDark ? 'Modo Claro' : 'Modo Oscuro';
+                lucide.createIcons();
+            }
+
+            // Invalidar caché del fondo de madera para regenerarlo con la iluminación adecuada
+            woodPatternCanvas = null;
+            if (shouldRenderCanvas) {
+                renderCanvas();
+            }
+        }
+
+        function toggleTheme() {
+            const isCurrentlyDark = document.documentElement.classList.contains('dark');
+            const nextDark = !isCurrentlyDark;
+            localStorage.setItem(THEME_STORAGE_KEY, nextDark ? 'dark' : 'light');
+            applyTheme(nextDark, true);
+        }
+
+        // --- CONFIGURACIÓN Y ESTADO DE LA APLICACIÓN ---
+        const STORAGE_KEY = 'tinta_tela_store_config_v2';
+        const STAFF_SESSION_KEY = 'tinta_tela_staff_unlocked';
+
+        const DEFAULT_STORE_CONFIG = {
+            brandName: 'TINTA & TELA',
+            brandSubtitle: 'Taller de Estampados',
+            logoDataUrl: '',
+            whatsappNumber: '',
+            staffPasscode: '1234',
+            baseShirt: 12000,
+            printPricePerSide: 4200,
+            xlSurcharge: 1500,
+            discountTier1Qty: 5,
+            discountTier1Pct: 10,
+            discountTier2Qty: 10,
+            discountTier2Pct: 15
+        };
+
+        let storeConfig = loadStoreConfig();
+        let tempAdminLogoDataUrl = '';
+        let isStaffAuthenticated = sessionStorage.getItem(STAFF_SESSION_KEY) === 'true';
+        let pendingStaffCallback = null;
+
+        // Paleta de colores clásica para remeras
+        const TSHIRT_COLORS = [
+            { name: 'Blanco', hex: '#ffffff', border: '#cbd5e1' },
+            { name: 'Negro', hex: '#1e1e24', border: '#1e1e24' },
+            { name: 'Azul Intenso', hex: '#11559c', border: '#11559c' },
+            { name: 'Gris Melange', hex: '#9ca3af', border: '#9ca3af' },
+            { name: 'Azul Marino', hex: '#1e3a8a', border: '#1e3a8a' },
+            { name: 'Rojo', hex: '#dc2626', border: '#dc2626' },
+            { name: 'Verde Botella', hex: '#14532d', border: '#14532d' },
+            { name: 'Beige', hex: '#e7dec8', border: '#d6cbb3' }
+        ];
+
+        // Estado global
+        const state = {
+            side: 'front', // 'front' | 'back'
+            bgMode: 'wood', // 'wood' | 'neutral'
+            colorName: 'Azul Intenso',
+            colorHex: '#11559c',
+            size: 'M',
+            quantity: 1,
+            designs: {
+                front: null,
+                back: null
+            },
+            activeHandle: null,
+            dragStartX: 0,
+            dragStartY: 0,
+            initialDesignX: 0,
+            initialDesignY: 0,
+            initialScale: 0.72,
+            initialRotation: 0,
+            initialDist: 1,
+            pinchStartDist: 0,
+            pinchStartAngle: 0,
+            pinchInitialScale: 0.72,
+            pinchInitialRotation: 0
+        };
+
+        // Referencias DOM
+        const canvas = document.getElementById('tshirt-canvas');
+        const ctx = canvas.getContext('2d');
+        let woodPatternCanvas = null;
+        let cottonTextureCanvas = null;
+        let fabricJerseyTile = null;
+
+        // Geometría normalizada de la remera flat-lay (600x660)
+        const V_WIDTH = 600;
+        const V_HEIGHT = 660;
+        const PRINT_AREA = {
+            x: 205,
+            y: 175,
+            width: 190,
+            height: 280
+        };
+
+        // --- INICIALIZACIÓN ---
+        function init() {
+            initTheme();
+            applyStoreConfigToUI();
+            updateStaffVisibility();
+            document.getElementById('selected-color-name').textContent = state.colorName;
+            renderColorSwatches();
+            setupDragAndDrop();
+            setupCanvasInteractions();
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            window.addEventListener('hashchange', checkStaffHashTrigger);
+            updatePrice();
+            updateUIControls();
+            checkStaffHashTrigger();
+        }
+
+        // --- CONTROL DE ACCESO DUEÑO Y MODERADORES ---
+        function updateStaffVisibility() {
+            const configBtn = document.getElementById('admin-config-btn');
+            const logoutBtn = document.getElementById('staff-logout-btn');
+            if (configBtn) {
+                configBtn.classList.toggle('hidden', !isStaffAuthenticated);
+            }
+            if (logoutBtn) {
+                logoutBtn.classList.toggle('hidden', !isStaffAuthenticated);
+            }
+        }
+
+        function requestStaffAccess(onSuccess) {
+            if (isStaffAuthenticated) {
+                if (typeof onSuccess === 'function') onSuccess();
+                return;
+            }
+            pendingStaffCallback = typeof onSuccess === 'function' ? onSuccess : null;
+            const modal = document.getElementById('staff-login-modal');
+            const input = document.getElementById('staff-passcode-input');
+            const errorEl = document.getElementById('staff-login-error');
+            if (errorEl) errorEl.classList.add('hidden');
+            if (input) {
+                input.value = '';
+                setTimeout(() => input.focus(), 50);
+            }
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeStaffLoginModal() {
+            const modal = document.getElementById('staff-login-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            pendingStaffCallback = null;
+        }
+
+        function submitStaffLogin(event) {
+            event.preventDefault();
+            const input = document.getElementById('staff-passcode-input');
+            const errorEl = document.getElementById('staff-login-error');
+            const enteredCode = (input ? input.value : '').trim();
+            const expectedCode = String(storeConfig.staffPasscode || DEFAULT_STORE_CONFIG.staffPasscode).trim();
+
+            if (enteredCode === expectedCode) {
+                isStaffAuthenticated = true;
+                sessionStorage.setItem(STAFF_SESSION_KEY, 'true');
+                updateStaffVisibility();
+                const callback = pendingStaffCallback;
+                closeStaffLoginModal();
+                showToast('Acceso de dueño/moderador habilitado');
+                if (callback) {
+                    callback();
+                } else {
+                    openAdminModal();
+                }
+            } else if (errorEl) {
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        function lockStaffSession() {
+            isStaffAuthenticated = false;
+            sessionStorage.removeItem(STAFF_SESSION_KEY);
+            closeAdminModal();
+            updateStaffVisibility();
+            showToast('Vista de cliente restaurada');
+        }
+
+        function checkStaffHashTrigger() {
+            if (window.location.hash === '#staff' || window.location.hash === '#admin') {
+                requestStaffAccess(() => openAdminModal());
+            }
+        }
+
+        // Atajo discreto para dueño o moderador desde consola o enlace: abrirStaff()
+        window.abrirStaff = function() {
+            requestStaffAccess(() => openAdminModal());
+        };
+
+        // --- PERSISTENCIA Y PANEL DE TIENDA ---
+        function loadStoreConfig() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    return { ...DEFAULT_STORE_CONFIG, ...JSON.parse(raw) };
+                }
+            } catch (e) {
+                console.warn('No se pudo leer configuración guardada:', e);
+            }
+            return { ...DEFAULT_STORE_CONFIG };
+        }
+
+        function applyStoreConfigToUI() {
+            document.getElementById('brand-name-display').textContent = storeConfig.brandName || DEFAULT_STORE_CONFIG.brandName;
+            document.getElementById('brand-subtitle-display').textContent = storeConfig.brandSubtitle || '';
+            document.title = `${storeConfig.brandName || 'Tinta & Tela'} | Personalizador de Remeras`;
+
+            const logoContainer = document.getElementById('brand-logo-container');
+            if (storeConfig.logoDataUrl) {
+                logoContainer.innerHTML = `<img src="${storeConfig.logoDataUrl}" alt="Logo" class="w-full h-full object-cover">`;
+            } else {
+                logoContainer.innerHTML = `<i data-lucide="shirt" class="w-5 h-5"></i>`;
+            }
+
+            const xlHint = document.getElementById('xl-surcharge-hint');
+            if (xlHint) {
+                xlHint.textContent = storeConfig.xlSurcharge > 0
+                    ? `(+${formatARS(storeConfig.xlSurcharge)} en XL/XXL)`
+                    : '';
+            }
+
+            const waBanner = document.getElementById('whatsapp-unconfigured-banner');
+            if (waBanner) {
+                waBanner.classList.toggle('hidden', isValidWhatsAppNumber(storeConfig.whatsappNumber));
+            }
+
+            lucide.createIcons();
+        }
+
+        function isValidWhatsAppNumber(num) {
+            const clean = String(num || '').replace(/\D/g, '');
+            return clean.length >= 8 && clean.length <= 15;
+        }
+
+        function updateAdminLogoPreview() {
+            const preview = document.getElementById('cfg-logo-preview');
+            const removeBtn = document.getElementById('cfg-remove-logo-btn');
+            if (!preview) return;
+
+            if (tempAdminLogoDataUrl) {
+                preview.innerHTML = `<img src="${tempAdminLogoDataUrl}" alt="Vista previa logo" class="w-full h-full object-cover">`;
+                if (removeBtn) removeBtn.classList.remove('hidden');
+            } else {
+                preview.innerHTML = `<i data-lucide="shirt" class="w-6 h-6"></i>`;
+                if (removeBtn) removeBtn.classList.add('hidden');
+                lucide.createIcons();
+            }
+        }
+
+        function openAdminModal() {
+            if (!isStaffAuthenticated) {
+                requestStaffAccess(() => openAdminModal());
+                return;
+            }
+            const setVal = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.value = value ?? '';
+            };
+
+            setVal('cfg-brand-name', storeConfig.brandName);
+            setVal('cfg-brand-subtitle', storeConfig.brandSubtitle);
+            setVal('cfg-whatsapp', storeConfig.whatsappNumber);
+            setVal('cfg-staff-passcode', storeConfig.staffPasscode || DEFAULT_STORE_CONFIG.staffPasscode);
+            setVal('cfg-price-base', storeConfig.baseShirt);
+            setVal('cfg-price-print', storeConfig.printPricePerSide);
+            setVal('cfg-price-xl', storeConfig.xlSurcharge);
+            setVal('cfg-disc1-qty', storeConfig.discountTier1Qty);
+            setVal('cfg-disc1-pct', storeConfig.discountTier1Pct);
+            setVal('cfg-disc2-qty', storeConfig.discountTier2Qty);
+            setVal('cfg-disc2-pct', storeConfig.discountTier2Pct);
+
+            tempAdminLogoDataUrl = storeConfig.logoDataUrl || '';
+            updateAdminLogoPreview();
+
+            const modal = document.getElementById('admin-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                lucide.createIcons();
+            }
+        }
+
+        function closeAdminModal() {
+            const modal = document.getElementById('admin-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        function handleLogoUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                tempAdminLogoDataUrl = e.target.result;
+                updateAdminLogoPreview();
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+
+        function removeCustomLogo() {
+            tempAdminLogoDataUrl = '';
+            updateAdminLogoPreview();
+        }
+
+        function saveStoreSettings(event) {
+            event.preventDefault();
+            if (!isStaffAuthenticated) {
+                requestStaffAccess();
+                return;
+            }
+            const nextPasscode = document.getElementById('cfg-staff-passcode').value.trim();
+            storeConfig = {
+                brandName: document.getElementById('cfg-brand-name').value.trim() || DEFAULT_STORE_CONFIG.brandName,
+                brandSubtitle: document.getElementById('cfg-brand-subtitle').value.trim(),
+                logoDataUrl: tempAdminLogoDataUrl,
+                whatsappNumber: document.getElementById('cfg-whatsapp').value.replace(/\D/g, ''),
+                staffPasscode: nextPasscode.length >= 4 ? nextPasscode : (storeConfig.staffPasscode || DEFAULT_STORE_CONFIG.staffPasscode),
+                baseShirt: Math.max(0, Number(document.getElementById('cfg-price-base').value) || 0),
+                printPricePerSide: Math.max(0, Number(document.getElementById('cfg-price-print').value) || 0),
+                xlSurcharge: Math.max(0, Number(document.getElementById('cfg-price-xl').value) || 0),
+                discountTier1Qty: Math.max(2, Number(document.getElementById('cfg-disc1-qty').value) || 5),
+                discountTier1Pct: Math.min(90, Math.max(0, Number(document.getElementById('cfg-disc1-pct').value) || 0)),
+                discountTier2Qty: Math.max(2, Number(document.getElementById('cfg-disc2-qty').value) || 10),
+                discountTier2Pct: Math.min(90, Math.max(0, Number(document.getElementById('cfg-disc2-pct').value) || 0))
+            };
+
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(storeConfig));
+            } catch (e) {
+                console.warn('Error guardando en localStorage:', e);
+            }
+
+            applyStoreConfigToUI();
+            updatePrice();
+            closeAdminModal();
+            showToast('Configuración de tienda guardada');
+        }
+
+        function resetStoreDefaults() {
+            if (!isStaffAuthenticated) return;
+            const currentPasscode = storeConfig.staffPasscode || DEFAULT_STORE_CONFIG.staffPasscode;
+            storeConfig = { ...DEFAULT_STORE_CONFIG, staffPasscode: currentPasscode };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(storeConfig));
+            applyStoreConfigToUI();
+            updatePrice();
+            closeAdminModal();
+            showToast('Precios y marca restaurados por defecto');
+        }
+
+        // --- SELECTOR DE COLORES ---
+        function renderColorSwatches() {
+            const container = document.getElementById('color-swatches');
+            container.innerHTML = '';
+
+            TSHIRT_COLORS.forEach(color => {
+                const isSelected = state.colorHex.toLowerCase() === color.hex.toLowerCase();
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.title = color.name;
+                btn.onclick = () => selectColor(color.name, color.hex);
+                btn.className = `w-10 h-10 rounded-full transition-all flex items-center justify-center shadow-sm ${
+                    isSelected ? 'ring-2 ring-offset-2 ring-slate-900 dark:ring-white dark:ring-offset-slate-900 scale-105' : 'hover:scale-105'
+                }`;
+                btn.style.backgroundColor = color.hex;
+                btn.style.border = `1.5px solid ${color.border}`;
+
+                if (isSelected) {
+                    const checkColor = isColorDark(color.hex) ? 'text-white' : 'text-slate-900';
+                    btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 ${checkColor} stroke-[3]"></i>`;
+                }
+
+                container.appendChild(btn);
+            });
+            lucide.createIcons();
+        }
+
+        function selectColor(name, hex) {
+            state.colorName = name;
+            state.colorHex = hex;
+            document.getElementById('selected-color-name').textContent = name;
+            renderColorSwatches();
+            renderCanvas();
+        }
+
+        function toggleStudioBackground() {
+            state.bgMode = state.bgMode === 'wood' ? 'neutral' : 'wood';
+            document.getElementById('bg-mode-label').textContent =
+                state.bgMode === 'wood' ? 'Mesa de Madera' : 'Fondo Neutro';
+            renderCanvas();
+        }
+
+        function selectCustomColor(hex) {
+            state.colorName = `Personalizado (${hex.toUpperCase()})`;
+            state.colorHex = hex;
+            document.getElementById('selected-color-name').textContent = hex.toUpperCase();
+            renderColorSwatches();
+            renderCanvas();
+        }
+
+        // --- CAMBIO DE FRENTE / ESPALDA ---
+        function switchSide(side) {
+            state.side = side;
+            const btnFront = document.getElementById('btn-view-front');
+            const btnBack = document.getElementById('btn-view-back');
+
+            if (side === 'front') {
+                btnFront.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm flex items-center gap-2';
+                btnBack.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2';
+            } else {
+                btnBack.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm flex items-center gap-2';
+                btnFront.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2';
+            }
+
+            document.getElementById('dropzone-side-text').textContent = side === 'front' ? 'Frente' : 'Espalda';
+            document.getElementById('current-side-label').textContent = side === 'front' ? 'Frente' : 'Espalda';
+
+            updateUIControls();
+            renderCanvas();
+        }
+
+        // --- CARGA DE IMÁGENES ---
+        function setupDragAndDrop() {
+            const dropZone = document.getElementById('drop-zone');
+            const fileInput = document.getElementById('file-input');
+
+            dropZone.addEventListener('click', () => fileInput.click());
+
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('border-slate-900', 'dark:border-slate-400', 'bg-slate-100', 'dark:bg-slate-800');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('border-slate-900', 'dark:border-slate-400', 'bg-slate-100', 'dark:bg-slate-800');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('border-slate-900', 'dark:border-slate-400', 'bg-slate-100', 'dark:bg-slate-800');
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    processImageFile(e.dataTransfer.files[0]);
+                }
+            });
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files && e.target.files[0]) {
+                processImageFile(e.target.files[0]);
+                e.target.value = '';
+            }
+        }
+
+        function processImageFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showToast('Por favor subí un archivo de imagen válido (PNG, JPG, SVG).');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    state.designs[state.side] = {
+                        img: img,
+                        x: PRINT_AREA.x + PRINT_AREA.width / 2,
+                        y: PRINT_AREA.y + PRINT_AREA.height * 0.42,
+                        scale: 0.75,
+                        rotation: 0,
+                        aspect: img.width / img.height
+                    };
+
+                    updateUIControls();
+                    updatePrice();
+                    renderCanvas();
+                    showToast(`Diseño cargado en ${state.side === 'front' ? 'Frente' : 'Espalda'}`);
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- CONTROLES DE TRANSFORMACIÓN DEL DISEÑO ---
+        function updateUIControls() {
+            const design = state.designs[state.side];
+            const panel = document.getElementById('design-controls-panel');
+            const hint = document.getElementById('canvas-hint');
+            const badge = document.getElementById('design-status-badge');
+            const readout = document.getElementById('transform-readout');
+            const sideName = state.side === 'front' ? 'Frente' : 'Espalda';
+
+            if (design) {
+                panel.classList.remove('hidden');
+                hint.classList.remove('hidden');
+                badge.textContent = `Estampa activa (${sideName})`;
+                badge.className = 'hidden sm:inline-block text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300';
+                if (readout) {
+                    readout.textContent = `${Math.round(design.scale * 100)}% · ${Math.round(design.rotation)}°`;
+                }
+            } else {
+                panel.classList.add('hidden');
+                hint.classList.add('hidden');
+                badge.textContent = `Sin diseño en ${sideName}`;
+                badge.className = 'hidden sm:inline-block text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300';
+            }
+        }
+
+        function resetRotation() {
+            const design = state.designs[state.side];
+            if (!design) return;
+            design.rotation = 0;
+            updateUIControls();
+            renderCanvas();
+            showToast('Diseño enderezado a 0°');
+        }
+
+        function centerDesign() {
+            const design = state.designs[state.side];
+            if (!design) return;
+            design.x = PRINT_AREA.x + PRINT_AREA.width / 2;
+            design.y = PRINT_AREA.y + PRINT_AREA.height * 0.45;
+            renderCanvas();
+            showToast('Diseño centrado en el área de impresión');
+        }
+
+        function removeDesign() {
+            state.designs[state.side] = null;
+            state.activeHandle = null;
+            updateUIControls();
+            updatePrice();
+            renderCanvas();
+            showToast('Diseño eliminado');
+        }
+
+        // --- INTERACCIÓN DIRECTA CON MOUSE Y TOUCH EN EL CANVAS (MOVER, ESCALAR, ROTAR) ---
+        function getVirtualCoords(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            const uniformScale = Math.min(rect.width / V_WIDTH, rect.height / V_HEIGHT);
+            const offsetX = (rect.width - V_WIDTH * uniformScale) / 2;
+            const offsetY = (rect.height - V_HEIGHT * uniformScale) / 2;
+
+            return {
+                x: (clientX - rect.left - offsetX) / uniformScale,
+                y: (clientY - rect.top - offsetY) / uniformScale
+            };
+        }
+
+        function getDesignGeometry(design) {
+            const drawW = PRINT_AREA.width * design.scale;
+            const drawH = drawW / design.aspect;
+            const halfW = drawW / 2;
+            const halfH = drawH / 2;
+            const rad = (design.rotation * Math.PI) / 180;
+            const cos = Math.cos(rad);
+            const sin = Math.sin(rad);
+
+            const toWorld = (lx, ly) => ({
+                x: design.x + lx * cos - ly * sin,
+                y: design.y + lx * sin + ly * cos
+            });
+
+            const toLocal = (wx, wy) => {
+                const dx = wx - design.x;
+                const dy = wy - design.y;
+                return {
+                    x: dx * cos + dy * sin,
+                    y: -dx * sin + dy * cos
+                };
+            };
+
+            return {
+                drawW,
+                drawH,
+                halfW,
+                halfH,
+                corners: {
+                    tl: toWorld(-halfW, -halfH),
+                    tr: toWorld(halfW, -halfH),
+                    br: toWorld(halfW, halfH),
+                    bl: toWorld(-halfW, halfH)
+                },
+                rotateHandle: toWorld(0, -halfH - 28),
+                deleteHandle: toWorld(halfW + 12, -halfH - 12),
+                toLocal
+            };
+        }
+
+        function hitTestHandles(vx, vy, design) {
+            if (!design) return null;
+            const geom = getDesignGeometry(design);
+            const handleHitRadius = 18; // Radio táctil cómodo
+
+            const dist = (p) => Math.hypot(vx - p.x, vy - p.y);
+
+            // 1. Botón rápido eliminar (esquina superior derecha exterior)
+            if (dist(geom.deleteHandle) <= 15) return 'delete';
+
+            // 2. Tirador de rotación superior
+            if (dist(geom.rotateHandle) <= handleHitRadius) return 'rotate';
+
+            // 3. Tiradores de escala en las 4 esquinas
+            if (dist(geom.corners.tl) <= handleHitRadius) return 'scale-tl';
+            if (dist(geom.corners.tr) <= handleHitRadius) return 'scale-tr';
+            if (dist(geom.corners.br) <= handleHitRadius) return 'scale-br';
+            if (dist(geom.corners.bl) <= handleHitRadius) return 'scale-bl';
+
+            // 4. Cuerpo interior del diseño para mover
+            const local = geom.toLocal(vx, vy);
+            if (
+                Math.abs(local.x) <= geom.halfW + 8 &&
+                Math.abs(local.y) <= geom.halfH + 8
+            ) {
+                return 'move';
+            }
+
+            return null;
+        }
+
+        function updateCursorForHandle(handle) {
+            if (!handle) {
+                canvas.style.cursor = 'default';
+            } else if (handle === 'move') {
+                canvas.style.cursor = state.activeHandle === 'move' ? 'grabbing' : 'grab';
+            } else if (handle === 'rotate') {
+                canvas.style.cursor = 'crosshair';
+            } else if (handle === 'delete') {
+                canvas.style.cursor = 'pointer';
+            } else if (handle === 'scale-tl' || handle === 'scale-br') {
+                canvas.style.cursor = 'nwse-resize';
+            } else if (handle === 'scale-tr' || handle === 'scale-bl') {
+                canvas.style.cursor = 'nesw-resize';
+            }
+        }
+
+        function setupCanvasInteractions() {
+            const beginPointerAction = (clientX, clientY) => {
+                const design = state.designs[state.side];
+                if (!design) return false;
+                const pos = getVirtualCoords(clientX, clientY);
+                const hit = hitTestHandles(pos.x, pos.y, design);
+                if (!hit) return false;
+
+                if (hit === 'delete') {
+                    removeDesign();
+                    return true;
+                }
+
+                state.activeHandle = hit;
+                state.dragStartX = pos.x;
+                state.dragStartY = pos.y;
+                state.initialDesignX = design.x;
+                state.initialDesignY = design.y;
+                state.initialScale = design.scale;
+                state.initialRotation = design.rotation;
+                state.initialDist = Math.max(10, Math.hypot(pos.x - design.x, pos.y - design.y));
+                updateCursorForHandle(hit);
+                return true;
+            };
+
+            const movePointerAction = (clientX, clientY) => {
+                const design = state.designs[state.side];
+                if (!design) {
+                    canvas.style.cursor = 'default';
+                    return;
+                }
+                const pos = getVirtualCoords(clientX, clientY);
+
+                if (!state.activeHandle) {
+                    const hoverHit = hitTestHandles(pos.x, pos.y, design);
+                    updateCursorForHandle(hoverHit);
+                    return;
+                }
+
+                if (state.activeHandle === 'move') {
+                    const dx = pos.x - state.dragStartX;
+                    const dy = pos.y - state.dragStartY;
+
+                    const minX = PRINT_AREA.x + 12;
+                    const maxX = PRINT_AREA.x + PRINT_AREA.width - 12;
+                    const minY = PRINT_AREA.y + 12;
+                    const maxY = PRINT_AREA.y + PRINT_AREA.height - 12;
+
+                    design.x = Math.max(minX, Math.min(maxX, state.initialDesignX + dx));
+                    design.y = Math.max(minY, Math.min(maxY, state.initialDesignY + dy));
+                } else if (state.activeHandle.startsWith('scale-')) {
+                    const currentDist = Math.max(10, Math.hypot(pos.x - design.x, pos.y - design.y));
+                    const ratio = currentDist / state.initialDist;
+                    design.scale = Math.max(0.18, Math.min(1.6, state.initialScale * ratio));
+                } else if (state.activeHandle === 'rotate') {
+                    const angleRad = Math.atan2(pos.y - design.y, pos.x - design.x);
+                    let deg = (angleRad * 180) / Math.PI + 90;
+                    if (deg > 180) deg -= 360;
+                    if (deg < -180) deg += 360;
+
+                    // Imán suave cada 45° para alinear fácilmente
+                    const snapTargets = [-180, -135, -90, -45, 0, 45, 90, 135, 180];
+                    for (const target of snapTargets) {
+                        if (Math.abs(deg - target) < 4) {
+                            deg = target;
+                            break;
+                        }
+                    }
+                    design.rotation = Math.round(deg);
+                }
+
+                updateUIControls();
+                renderCanvas();
+            };
+
+            const endPointerAction = () => {
+                if (state.activeHandle) {
+                    state.activeHandle = null;
+                    canvas.style.cursor = 'default';
+                }
+            };
+
+            // Eventos Mouse
+            canvas.addEventListener('mousedown', e => beginPointerAction(e.clientX, e.clientY));
+            window.addEventListener('mousemove', e => movePointerAction(e.clientX, e.clientY));
+            window.addEventListener('mouseup', endPointerAction);
+
+            // Rueda del mouse sobre el diseño para escalar rápido
+            canvas.addEventListener('wheel', e => {
+                const design = state.designs[state.side];
+                if (!design) return;
+                const pos = getVirtualCoords(e.clientX, e.clientY);
+                if (hitTestHandles(pos.x, pos.y, design)) {
+                    e.preventDefault();
+                    const factor = e.deltaY < 0 ? 1.06 : 0.94;
+                    design.scale = Math.max(0.18, Math.min(1.6, design.scale * factor));
+                    updateUIControls();
+                    renderCanvas();
+                }
+            }, { passive: false });
+
+            // Eventos Touch (1 dedo = arrastrar/escalar/rotar tirador; 2 dedos = pellizco + rotación)
+            canvas.addEventListener('touchstart', e => {
+                const design = state.designs[state.side];
+                if (!design) return;
+
+                if (e.touches.length === 1) {
+                    const touch = e.touches[0];
+                    if (beginPointerAction(touch.clientX, touch.clientY)) {
+                        e.preventDefault();
+                    }
+                } else if (e.touches.length === 2) {
+                    e.preventDefault();
+                    state.activeHandle = 'pinch';
+                    const p1 = getVirtualCoords(e.touches[0].clientX, e.touches[0].clientY);
+                    const p2 = getVirtualCoords(e.touches[1].clientX, e.touches[1].clientY);
+                    state.pinchStartDist = Math.max(10, Math.hypot(p2.x - p1.x, p2.y - p1.y));
+                    state.pinchStartAngle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+                    state.pinchInitialScale = design.scale;
+                    state.pinchInitialRotation = design.rotation;
+                }
+            }, { passive: false });
+
+            canvas.addEventListener('touchmove', e => {
+                const design = state.designs[state.side];
+                if (!design) return;
+
+                if (e.touches.length === 1 && state.activeHandle && state.activeHandle !== 'pinch') {
+                    e.preventDefault();
+                    movePointerAction(e.touches[0].clientX, e.touches[0].clientY);
+                } else if (e.touches.length === 2 && state.activeHandle === 'pinch') {
+                    e.preventDefault();
+                    const p1 = getVirtualCoords(e.touches[0].clientX, e.touches[0].clientY);
+                    const p2 = getVirtualCoords(e.touches[1].clientX, e.touches[1].clientY);
+                    const currDist = Math.max(10, Math.hypot(p2.x - p1.x, p2.y - p1.y));
+                    const currAngle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+
+                    const scaleRatio = currDist / state.pinchStartDist;
+                    design.scale = Math.max(0.18, Math.min(1.6, state.pinchInitialScale * scaleRatio));
+
+                    let deltaDeg = ((currAngle - state.pinchStartAngle) * 180) / Math.PI;
+                    let newRot = state.pinchInitialRotation + deltaDeg;
+                    while (newRot > 180) newRot -= 360;
+                    while (newRot < -180) newRot += 360;
+                    design.rotation = Math.round(newRot);
+
+                    updateUIControls();
+                    renderCanvas();
+                }
+            }, { passive: false });
+
+            canvas.addEventListener('touchend', e => {
+                if (e.touches.length === 0) {
+                    endPointerAction();
+                }
+            });
+        }
+
+        // --- RENDERIZADO REALISTA DE REMERA FLAT-LAY SOBRE MESA DE MADERA ---
+        function resizeCanvas() {
+            const wrapper = document.getElementById('canvas-wrapper');
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = wrapper.clientWidth * dpr;
+            canvas.height = wrapper.clientHeight * dpr;
+            renderCanvas();
+        }
+
+        // Textura procedural de tejido de algodón peinado jersey (en caché para alto rendimiento)
+        function getCottonTextureCanvas() {
+            if (cottonTextureCanvas) return cottonTextureCanvas;
+            const cCanvas = document.createElement('canvas');
+            cCanvas.width = 120;
+            cCanvas.height = 120;
+            const cCtx = cCanvas.getContext('2d');
+
+            cCtx.fillStyle = '#808080';
+            cCtx.fillRect(0, 0, 120, 120);
+
+            // Micro-trama de puntos de algodón peinado y jaspeado sutil
+            for (let y = 0; y < 120; y += 2) {
+                for (let x = 0; x < 120; x += 2) {
+                    const hash = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+                    const rand = hash - Math.floor(hash);
+                    const shade = Math.floor(114 + rand * 28);
+                    cCtx.fillStyle = `rgb(${shade},${shade},${shade})`;
+                    cCtx.fillRect(x, y, 1.5, 2);
+                }
+            }
+
+            // Líneas verticales sutiles de tejido jersey
+            cCtx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+            for (let x = 0; x < 120; x += 3) {
+                cCtx.fillRect(x, 0, 1, 120);
+            }
+
+            cottonTextureCanvas = cCanvas;
+            return cCanvas;
+        }
+
+        // Generador procedural de mesa de madera rústica cálida (adapta iluminación según modo claro/oscuro)
+        function getWoodBackgroundCanvas() {
+            if (woodPatternCanvas) return woodPatternCanvas;
+            const isDark = document.documentElement.classList.contains('dark');
+            const wCanvas = document.createElement('canvas');
+            wCanvas.width = V_WIDTH;
+            wCanvas.height = V_HEIGHT;
+            const wCtx = wCanvas.getContext('2d');
+
+            // Franja superior tipo alféizar / luz natural de ventana
+            const topLight = wCtx.createLinearGradient(0, 0, 0, 56);
+            if (isDark) {
+                topLight.addColorStop(0, '#1e293b');
+                topLight.addColorStop(0.75, '#171c26');
+                topLight.addColorStop(1, '#26180f');
+            } else {
+                topLight.addColorStop(0, '#e5e0d8');
+                topLight.addColorStop(0.75, '#d2c9bb');
+                topLight.addColorStop(1, '#5a3a22');
+            }
+            wCtx.fillStyle = topLight;
+            wCtx.fillRect(0, 0, V_WIDTH, 56);
+
+            // Tablones horizontales de madera rústica cálida
+            const planks = isDark ? [
+                { y: 52, h: 125, base: '#2c1c11', dark: '#180e08', light: '#3b2618' },
+                { y: 177, h: 138, base: '#332114', dark: '#1b1009', light: '#442c1b' },
+                { y: 315, h: 142, base: '#291a10', dark: '#150c06', light: '#372316' },
+                { y: 457, h: 138, base: '#301f13', dark: '#190f08', light: '#402919' },
+                { y: 595, h: 65, base: '#160d07', dark: '#0b0603', light: '#21140b' }
+            ] : [
+                { y: 52, h: 125, base: '#6f472b', dark: '#482b18', light: '#875938' },
+                { y: 177, h: 138, base: '#7c5031', dark: '#4e2f1a', light: '#93623f' },
+                { y: 315, h: 142, base: '#694227', dark: '#422614', light: '#825535' },
+                { y: 457, h: 138, base: '#754b2e', dark: '#472a17', light: '#8c5c3a' },
+                { y: 595, h: 65, base: '#3d2312', dark: '#241308', light: '#52311b' }
+            ];
+
+            planks.forEach((p, idx) => {
+                const grad = wCtx.createLinearGradient(0, p.y, 0, p.y + p.h);
+                grad.addColorStop(0, p.dark);
+                grad.addColorStop(0.08, p.base);
+                grad.addColorStop(0.5, p.light);
+                grad.addColorStop(0.92, p.base);
+                grad.addColorStop(1, p.dark);
+                wCtx.fillStyle = grad;
+                wCtx.fillRect(0, p.y, V_WIDTH, p.h);
+
+                // Vetas orgánicas horizontales dentro de cada tablón
+                wCtx.save();
+                wCtx.beginPath();
+                wCtx.rect(0, p.y, V_WIDTH, p.h);
+                wCtx.clip();
+
+                for (let g = 0; g < 26; g++) {
+                    const gy = p.y + ((g * 17 + idx * 11) % p.h);
+                    wCtx.beginPath();
+                    wCtx.moveTo(0, gy);
+                    const wave1 = Math.sin(g * 1.7 + idx) * 6;
+                    const wave2 = Math.cos(g * 1.3 - idx) * 6;
+                    wCtx.bezierCurveTo(200, gy + wave1, 400, gy + wave2, V_WIDTH, gy + (g % 2 === 0 ? 2 : -2));
+                    wCtx.strokeStyle = g % 3 === 0
+                        ? (isDark ? 'rgba(8, 3, 1, 0.38)' : 'rgba(30, 14, 5, 0.22)')
+                        : (isDark ? 'rgba(255, 200, 150, 0.04)' : 'rgba(255, 215, 175, 0.08)');
+                    wCtx.lineWidth = (g % 4) + 0.8;
+                    wCtx.stroke();
+                }
+
+                // Nudos sutiles de madera rústica
+                if (idx === 1 || idx === 3) {
+                    const knotX = idx === 1 ? 85 : 515;
+                    const knotY = p.y + p.h * 0.55;
+                    const knotGrad = wCtx.createRadialGradient(knotX, knotY, 2, knotX, knotY, 24);
+                    knotGrad.addColorStop(0, isDark ? 'rgba(10, 5, 2, 0.6)' : 'rgba(32, 16, 6, 0.45)');
+                    knotGrad.addColorStop(0.6, isDark ? 'rgba(18, 9, 4, 0.3)' : 'rgba(45, 24, 10, 0.2)');
+                    knotGrad.addColorStop(1, 'rgba(45, 24, 10, 0)');
+                    wCtx.fillStyle = knotGrad;
+                    wCtx.fillRect(knotX - 30, knotY - 20, 60, 40);
+                }
+
+                wCtx.restore();
+
+                // Junta oscura entre tablones
+                wCtx.fillStyle = isDark ? 'rgba(5, 2, 1, 0.85)' : 'rgba(20, 9, 3, 0.65)';
+                wCtx.fillRect(0, p.y, V_WIDTH, 2.5);
+            });
+
+            // Iluminación natural suave desde arriba (ventana) y viñeta sutil
+            const windowGlow = wCtx.createRadialGradient(V_WIDTH * 0.5, 95, 30, V_WIDTH * 0.5, 310, 420);
+            if (isDark) {
+                windowGlow.addColorStop(0, 'rgba(255, 225, 185, 0.10)');
+                windowGlow.addColorStop(0.65, 'rgba(255, 225, 185, 0.02)');
+                windowGlow.addColorStop(1, 'rgba(4, 2, 1, 0.52)');
+            } else {
+                windowGlow.addColorStop(0, 'rgba(255, 248, 235, 0.24)');
+                windowGlow.addColorStop(0.65, 'rgba(255, 248, 235, 0.04)');
+                windowGlow.addColorStop(1, 'rgba(18, 9, 3, 0.34)');
+            }
+            wCtx.fillStyle = windowGlow;
+            wCtx.fillRect(0, 0, V_WIDTH, V_HEIGHT);
+
+            woodPatternCanvas = wCanvas;
+            return wCanvas;
+        }
+
+        // Textura procedural offscreen de algodón peinado jersey (trama fina + jaspeado natural)
+        function getFabricJerseyPattern(targetCtx) {
+            if (!fabricJerseyTile) {
+                const tile = document.createElement('canvas');
+                tile.width = 96;
+                tile.height = 96;
+                const tCtx = tile.getContext('2d');
+
+                // Base neutra 50% gris para modos de fusión overlay / soft-light
+                tCtx.fillStyle = 'rgb(128, 128, 128)';
+                tCtx.fillRect(0, 0, 96, 96);
+
+                // Micro-puntos de hilado de algodón jersey (columnas verticales en V)
+                for (let y = 0; y < 96; y += 2) {
+                    for (let x = 0; x < 96; x += 2) {
+                        const wave = Math.sin(x * 0.65) * 6 + Math.cos(y * 0.85) * 6;
+                        const grain = ((x * 37 + y * 17) % 19) - 9;
+                        const val = Math.max(96, Math.min(160, Math.round(128 + wave + grain)));
+                        tCtx.fillStyle = `rgb(${val}, ${val}, ${val})`;
+                        tCtx.fillRect(x, y, 1.5, 1.8);
+                    }
+                }
+
+                // Hilos horizontales sutiles de tejido
+                tCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+                tCtx.lineWidth = 0.6;
+                for (let y = 1; y < 96; y += 3) {
+                    tCtx.beginPath();
+                    tCtx.moveTo(0, y);
+                    tCtx.lineTo(96, y);
+                    tCtx.stroke();
+                }
+
+                fabricJerseyTile = tile;
+            }
+            return targetCtx.createPattern(fabricJerseyTile, 'repeat');
+        }
+
+        // Silueta flat-lay orgánica con caída natural en hombros, mangas y cintura
+        function createTshirtPath(ctx, side) {
+            ctx.beginPath();
+            // Hombro izquierdo hacia cuello redondo
+            ctx.moveTo(230, 84);
+            if (side === 'front') {
+                // Escote delantero redondo pronunciado estilo crewneck
+                ctx.bezierCurveTo(255, 138, 345, 138, 370, 84);
+            } else {
+                // Escote trasero alto
+                ctx.bezierCurveTo(265, 102, 335, 102, 370, 84);
+            }
+            // Caída natural del hombro derecho hasta inicio de manga
+            ctx.quadraticCurveTo(410, 96, 449, 113);
+            // Manga derecha extendida con ligera curvatura de caída de tela
+            ctx.quadraticCurveTo(500, 158, 549, 209);
+            // Bocamanga derecha con leve arco orgánico
+            ctx.quadraticCurveTo(529, 239, 505, 267);
+            // Debajo de manga derecha hacia axila con pliegue suave
+            ctx.quadraticCurveTo(466, 245, 431, 224);
+            // Costado derecho del torso con caída orgánica (sin línea rígida)
+            ctx.bezierCurveTo(428, 335, 437, 455, 435, 579);
+            // Dobladillo inferior recto con caída natural suave
+            ctx.bezierCurveTo(368, 586, 232, 586, 165, 579);
+            // Costado izquierdo del torso con caída orgánica
+            ctx.bezierCurveTo(163, 455, 172, 335, 169, 224);
+            // Debajo de manga izquierda hacia bocamanga
+            ctx.quadraticCurveTo(134, 245, 95, 267);
+            // Bocamanga izquierda
+            ctx.quadraticCurveTo(71, 239, 51, 209);
+            // Manga izquierda exterior hacia hombro izquierdo
+            ctx.quadraticCurveTo(100, 158, 151, 113);
+            ctx.quadraticCurveTo(190, 96, 230, 84);
+            ctx.closePath();
+        }
+
+        function renderCanvas(targetCtx = ctx, canvasW = canvas.width, canvasH = canvas.height, forceHideGuides = false) {
+            targetCtx.save();
+            targetCtx.clearRect(0, 0, canvasW, canvasH);
+
+            // Escalar sistema virtual 600x660 al tamaño real del canvas
+            const scale = Math.min(canvasW / V_WIDTH, canvasH / V_HEIGHT);
+            const offsetX = (canvasW - V_WIDTH * scale) / 2;
+            const offsetY = (canvasH - V_HEIGHT * scale) / 2;
+
+            // Si está activo el fondo de mesa de madera, cubrir todo el lienzo de forma uniforme
+            if (state.bgMode === 'wood') {
+                const woodBg = getWoodBackgroundCanvas();
+                const coverScale = Math.max(canvasW / V_WIDTH, canvasH / V_HEIGHT);
+                const bgW = V_WIDTH * coverScale;
+                const bgH = V_HEIGHT * coverScale;
+                targetCtx.drawImage(woodBg, (canvasW - bgW) / 2, (canvasH - bgH) / 2, bgW, bgH);
+            }
+
+            targetCtx.translate(offsetX, offsetY);
+            targetCtx.scale(scale, scale);
+
+            // 1. Doble sombra de contacto flat-lay sobre la madera (sombra ambiental + contacto cercano)
+            targetCtx.save();
+            targetCtx.shadowColor = state.bgMode === 'wood' ? 'rgba(12, 5, 1, 0.62)' : 'rgba(15, 23, 42, 0.22)';
+            targetCtx.shadowBlur = 26;
+            targetCtx.shadowOffsetX = 0;
+            targetCtx.shadowOffsetY = 14;
+            createTshirtPath(targetCtx, state.side);
+            targetCtx.fillStyle = state.colorHex;
+            targetCtx.fill();
+
+            targetCtx.shadowColor = state.bgMode === 'wood' ? 'rgba(10, 4, 0, 0.45)' : 'rgba(15, 23, 42, 0.14)';
+            targetCtx.shadowBlur = 7;
+            targetCtx.shadowOffsetX = 0;
+            targetCtx.shadowOffsetY = 4;
+            targetCtx.fill();
+            targetCtx.restore();
+
+            // 2. Recorte (Clip) con la silueta de la remera para teñir dinámicamente
+            targetCtx.save();
+            createTshirtPath(targetCtx, state.side);
+            targetCtx.clip();
+
+            // Color base de la tela elegido por el usuario
+            targetCtx.fillStyle = state.colorHex;
+            targetCtx.fillRect(0, 0, V_WIDTH, V_HEIGHT);
+
+            // Textura realista de algodón peinado jersey (overlay + multiply sutil)
+            drawFabricTexture(targetCtx);
+
+            // Interior trasero del cuello visible en la vista Frontal con cavidad profunda y etiqueta tejida
+            if (state.side === 'front') {
+                targetCtx.beginPath();
+                targetCtx.moveTo(230, 84);
+                targetCtx.bezierCurveTo(265, 102, 335, 102, 370, 84);
+                targetCtx.bezierCurveTo(345, 138, 255, 138, 230, 84);
+                targetCtx.fillStyle = state.colorHex;
+                targetCtx.fill();
+
+                // Sombra interna profunda del interior del cuello
+                const neckInnerGrad = targetCtx.createLinearGradient(0, 84, 0, 136);
+                neckInnerGrad.addColorStop(0, 'rgba(0, 0, 0, 0.46)');
+                neckInnerGrad.addColorStop(0.55, 'rgba(0, 0, 0, 0.26)');
+                neckInnerGrad.addColorStop(1, 'rgba(0, 0, 0, 0.14)');
+                targetCtx.fillStyle = neckInnerGrad;
+                targetCtx.fill();
+
+                // Ribete interior trasero del cuello y pespunte
+                targetCtx.beginPath();
+                targetCtx.moveTo(242, 90);
+                targetCtx.quadraticCurveTo(300, 105, 358, 90);
+                targetCtx.strokeStyle = isColorDark(state.colorHex) ? 'rgba(255,255,255,0.20)' : 'rgba(0,0,0,0.24)';
+                targetCtx.lineWidth = 1.4;
+                targetCtx.stroke();
+
+                // Etiqueta tejida realista cosida en el cuello con sombra y talle
+                targetCtx.save();
+                targetCtx.shadowColor = 'rgba(0, 0, 0, 0.28)';
+                targetCtx.shadowBlur = 3;
+                targetCtx.shadowOffsetY = 1.5;
+                targetCtx.fillStyle = '#f8fafc';
+                targetCtx.fillRect(285, 95, 30, 14);
+                targetCtx.restore();
+
+                targetCtx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+                targetCtx.lineWidth = 0.7;
+                targetCtx.strokeRect(285, 95, 30, 14);
+
+                targetCtx.fillStyle = '#1e293b';
+                targetCtx.font = 'bold 7.5px Inter, sans-serif';
+                targetCtx.textAlign = 'center';
+                targetCtx.fillText(state.size, 300, 105);
+            }
+
+            // 3. Dibujar la imagen estampada del usuario integrada sobre la fibra de algodón
+            const design = state.designs[state.side];
+            if (design && design.img) {
+                targetCtx.save();
+                targetCtx.beginPath();
+                targetCtx.rect(PRINT_AREA.x, PRINT_AREA.y, PRINT_AREA.width, PRINT_AREA.height);
+                targetCtx.clip();
+
+                targetCtx.translate(design.x, design.y);
+                targetCtx.rotate((design.rotation * Math.PI) / 180);
+
+                const drawW = PRINT_AREA.width * design.scale;
+                const drawH = drawW / design.aspect;
+
+                // Tinta integrada al algodón
+                targetCtx.globalAlpha = 0.95;
+                targetCtx.drawImage(design.img, -drawW / 2, -drawH / 2, drawW, drawH);
+
+                // Micro-textura de tejido sobre la estampa para que no parezca pegada encima
+                const jerseyPattern = getFabricJerseyPattern(targetCtx);
+                if (jerseyPattern) {
+                    targetCtx.globalCompositeOperation = 'overlay';
+                    targetCtx.globalAlpha = 0.24;
+                    targetCtx.fillStyle = jerseyPattern;
+                    targetCtx.fillRect(-drawW / 2, -drawH / 2, drawW, drawH);
+                }
+
+                targetCtx.restore();
+            }
+
+            // 4. Pliegues reales, luces suaves y sombreado de tela (encima del diseño para realismo fotográfico)
+            drawRealisticFoldsAndShading(targetCtx, state.side);
+
+            // 5. Ribete acanalado del cuello y costuras dobles flat-lay
+            drawSeamsAndCollar(targetCtx, state.side);
+
+            // 6. Guía del área imprimible (se oculta al exportar para WhatsApp)
+            const showGuides = document.getElementById('toggle-guides').checked && !forceHideGuides;
+            if (showGuides) {
+                drawPrintAreaGuide(targetCtx, design);
+            }
+
+            targetCtx.restore(); // Fin del clip de la remera
+
+            // 7. Dibujar Bounding Box y tiradores interactivos por fuera del clip (si hay diseño y no es exportación)
+            if (design && !forceHideGuides) {
+                drawInteractiveHandles(targetCtx, design);
+            }
+
+            // Contorno exterior sutil para separar la prenda del fondo
+            createTshirtPath(targetCtx, state.side);
+            targetCtx.strokeStyle = isColorDark(state.colorHex) ? 'rgba(255,255,255,0.16)' : 'rgba(15,23,42,0.18)';
+            targetCtx.lineWidth = 1.4;
+            targetCtx.stroke();
+
+            targetCtx.restore();
+        }
+
+        function drawFabricTexture(ctx) {
+            ctx.save();
+            const pattern = getFabricJerseyPattern(ctx);
+            if (pattern) {
+                ctx.globalCompositeOperation = 'overlay';
+                ctx.globalAlpha = isColorDark(state.colorHex) ? 0.36 : 0.28;
+                ctx.fillStyle = pattern;
+                ctx.fillRect(45, 75, 510, 515);
+            }
+            ctx.restore();
+        }
+
+        function drawRealisticFoldsAndShading(ctx, side) {
+            ctx.save();
+            // Gradiente lateral de volumen suave sobre el torso plano + luz central natural
+            const bodyGrad = ctx.createLinearGradient(162, 0, 438, 0);
+            bodyGrad.addColorStop(0, 'rgba(0, 0, 0, 0.17)');
+            bodyGrad.addColorStop(0.13, 'rgba(0, 0, 0, 0.03)');
+            bodyGrad.addColorStop(0.48, 'rgba(255, 255, 255, 0.11)');
+            bodyGrad.addColorStop(0.87, 'rgba(0, 0, 0, 0.03)');
+            bodyGrad.addColorStop(1, 'rgba(0, 0, 0, 0.18)');
+            ctx.fillStyle = bodyGrad;
+            ctx.fillRect(158, 80, 284, 510);
+
+            // Pliegues diagonales naturales desde las axilas hacia el pecho
+            const foldLeft = ctx.createRadialGradient(172, 224, 4, 212, 282, 118);
+            foldLeft.addColorStop(0, 'rgba(0, 0, 0, 0.22)');
+            foldLeft.addColorStop(0.5, 'rgba(0, 0, 0, 0.07)');
+            foldLeft.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = foldLeft;
+            ctx.fillRect(158, 190, 145, 210);
+
+            // Brillo suave acompañando el pliegue izquierdo
+            const highlightLeft = ctx.createRadialGradient(215, 255, 4, 232, 290, 75);
+            highlightLeft.addColorStop(0, 'rgba(255, 255, 255, 0.09)');
+            highlightLeft.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = highlightLeft;
+            ctx.fillRect(175, 210, 120, 160);
+
+            const foldRight = ctx.createRadialGradient(428, 224, 4, 388, 282, 118);
+            foldRight.addColorStop(0, 'rgba(0, 0, 0, 0.22)');
+            foldRight.addColorStop(0.5, 'rgba(0, 0, 0, 0.07)');
+            foldRight.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = foldRight;
+            ctx.fillRect(297, 190, 145, 210);
+
+            // Pliegue sutil horizontal/diagonal en zona media-baja de caída de tela
+            const midFold = ctx.createLinearGradient(170, 415, 430, 485);
+            midFold.addColorStop(0, 'rgba(0,0,0,0)');
+            midFold.addColorStop(0.28, 'rgba(0,0,0,0.065)');
+            midFold.addColorStop(0.45, 'rgba(255,255,255,0.07)');
+            midFold.addColorStop(0.68, 'rgba(0,0,0,0.075)');
+            midFold.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = midFold;
+            ctx.fillRect(162, 395, 276, 175);
+
+            // Sombra suave en la unión de mangas y caída de hombros
+            ctx.beginPath();
+            ctx.moveTo(151, 113);
+            ctx.quadraticCurveTo(175, 168, 169, 224);
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.20)';
+            ctx.lineWidth = 6;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(449, 113);
+            ctx.quadraticCurveTo(425, 168, 431, 224);
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.20)';
+            ctx.lineWidth = 6;
+            ctx.stroke();
+
+            // Sombra sutil en borde inferior del dobladillo
+            const hemShadow = ctx.createLinearGradient(0, 560, 0, 585);
+            hemShadow.addColorStop(0, 'rgba(0, 0, 0, 0)');
+            hemShadow.addColorStop(1, 'rgba(0, 0, 0, 0.16)');
+            ctx.fillStyle = hemShadow;
+            ctx.fillRect(160, 560, 280, 26);
+
+            ctx.restore();
+        }
+
+        function drawSeamsAndCollar(ctx, side) {
+            ctx.save();
+            const isDark = isColorDark(state.colorHex);
+            const seamColor = isDark ? 'rgba(255, 255, 255, 0.24)' : 'rgba(15, 23, 42, 0.22)';
+            const ribShadow = isDark ? 'rgba(0, 0, 0, 0.42)' : 'rgba(15, 23, 42, 0.16)';
+            const ribHighlight = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.35)';
+
+            // 1. Ribete acanalado ancho del cuello (Collar Ribbing realista con textura elástica)
+            ctx.beginPath();
+            if (side === 'front') {
+                ctx.moveTo(221, 87);
+                ctx.bezierCurveTo(249, 149, 351, 149, 379, 87);
+            } else {
+                ctx.moveTo(223, 87);
+                ctx.bezierCurveTo(258, 113, 342, 113, 377, 87);
+            }
+            ctx.strokeStyle = ribShadow;
+            ctx.lineWidth = 12;
+            ctx.stroke();
+
+            // Textura acanalada vertical sutil sobre el ribete del cuello
+            ctx.save();
+            ctx.setLineDash([1.2, 2.2]);
+            ctx.strokeStyle = ribHighlight;
+            ctx.lineWidth = 9;
+            ctx.stroke();
+            ctx.restore();
+
+            // Doble pespunte exterior del cuello
+            ctx.beginPath();
+            if (side === 'front') {
+                ctx.moveTo(217, 89);
+                ctx.bezierCurveTo(246, 155, 354, 155, 383, 89);
+            } else {
+                ctx.moveTo(220, 89);
+                ctx.bezierCurveTo(256, 118, 344, 118, 380, 89);
+            }
+            ctx.setLineDash([2.5, 2.2]);
+            ctx.lineWidth = 1.2;
+            ctx.strokeStyle = seamColor;
+            ctx.stroke();
+
+            // 2. Costura de hombros
+            ctx.beginPath();
+            ctx.moveTo(224, 86);
+            ctx.quadraticCurveTo(188, 99, 151, 113);
+            ctx.moveTo(376, 86);
+            ctx.quadraticCurveTo(412, 99, 449, 113);
+            ctx.stroke();
+
+            // 3. Costura sisa izquierda y derecha
+            ctx.beginPath();
+            ctx.moveTo(153, 114);
+            ctx.quadraticCurveTo(175, 168, 169, 223);
+            ctx.moveTo(447, 114);
+            ctx.quadraticCurveTo(425, 168, 431, 223);
+            ctx.stroke();
+
+            // 4. Doble costura en dobladillo inferior
+            ctx.beginPath();
+            ctx.moveTo(166, 565);
+            ctx.bezierCurveTo(232, 572, 368, 572, 434, 565);
+            ctx.moveTo(166, 570);
+            ctx.bezierCurveTo(232, 577, 368, 577, 434, 570);
+            ctx.stroke();
+
+            // 5. Doble costura en bocamangas / puños
+            ctx.beginPath();
+            ctx.moveTo(61, 200);
+            ctx.quadraticCurveTo(83, 230, 104, 259);
+            ctx.moveTo(65, 197);
+            ctx.quadraticCurveTo(87, 227, 108, 256);
+
+            ctx.moveTo(539, 200);
+            ctx.quadraticCurveTo(517, 230, 496, 259);
+            ctx.moveTo(535, 197);
+            ctx.quadraticCurveTo(513, 227, 492, 256);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function drawPrintAreaGuide(ctx, design) {
+            ctx.save();
+            const isDark = isColorDark(state.colorHex);
+            ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.42)' : 'rgba(15, 23, 42, 0.34)';
+            ctx.lineWidth = 1.3;
+            ctx.setLineDash([5, 5]);
+            ctx.strokeRect(PRINT_AREA.x, PRINT_AREA.y, PRINT_AREA.width, PRINT_AREA.height);
+
+            if (!design) {
+                ctx.setLineDash([]);
+                ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.65)' : 'rgba(15, 23, 42, 0.55)';
+                ctx.font = '600 10px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('ÁREA DE ESTAMPADO', PRINT_AREA.x + PRINT_AREA.width / 2, PRINT_AREA.y + PRINT_AREA.height / 2 - 6);
+                ctx.font = '400 9px Inter, sans-serif';
+                ctx.fillText('(Subí tu imagen para editarla acá)', PRINT_AREA.x + PRINT_AREA.width / 2, PRINT_AREA.y + PRINT_AREA.height / 2 + 10);
+            }
+            ctx.restore();
+        }
+
+        // Cuadro delimitador interactivo con 4 tiradores de escala, tirador superior de rotación y botón X
+        function drawInteractiveHandles(ctx, design) {
+            const geom = getDesignGeometry(design);
+            ctx.save();
+
+            // 1. Marco del diseño rotado
+            ctx.save();
+            ctx.translate(design.x, design.y);
+            ctx.rotate((design.rotation * Math.PI) / 180);
+
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 1.8;
+            ctx.strokeRect(-geom.halfW, -geom.halfH, geom.drawW, geom.drawH);
+
+            // Línea conectora hacia el tirador de rotación superior
+            ctx.beginPath();
+            ctx.moveTo(0, -geom.halfH);
+            ctx.lineTo(0, -geom.halfH - 28);
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 1.6;
+            ctx.stroke();
+            ctx.restore();
+
+            // 2. Tirador circular de rotación (arriba)
+            ctx.beginPath();
+            ctx.arc(geom.rotateHandle.x, geom.rotateHandle.y, 9, 0, Math.PI * 2);
+            ctx.fillStyle = '#0f172a';
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#ffffff';
+            ctx.stroke();
+
+            // Pequeño arco de rotación dentro del círculo
+            ctx.beginPath();
+            ctx.arc(geom.rotateHandle.x, geom.rotateHandle.y, 4, -0.4, Math.PI * 1.3);
+            ctx.strokeStyle = '#34d399';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // 3. 4 Tiradores en las esquinas para escalar proporcionalmente
+            const cornerKeys = ['tl', 'tr', 'br', 'bl'];
+            cornerKeys.forEach(key => {
+                const pt = geom.corners[key];
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, 7.5, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+                ctx.lineWidth = 2.2;
+                ctx.strokeStyle = '#10b981';
+                ctx.stroke();
+            });
+
+            // 4. Botón rápido Eliminar (X) en esquina superior derecha externa
+            ctx.beginPath();
+            ctx.arc(geom.deleteHandle.x, geom.deleteHandle.y, 9.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#e11d48';
+            ctx.fill();
+            ctx.lineWidth = 1.8;
+            ctx.strokeStyle = '#ffffff';
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(geom.deleteHandle.x - 3.5, geom.deleteHandle.y - 3.5);
+            ctx.lineTo(geom.deleteHandle.x + 3.5, geom.deleteHandle.y + 3.5);
+            ctx.moveTo(geom.deleteHandle.x + 3.5, geom.deleteHandle.y - 3.5);
+            ctx.lineTo(geom.deleteHandle.x - 3.5, geom.deleteHandle.y + 3.5);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.8;
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        // --- SELECTORES DE TALLE, CANTIDAD Y PRECIO ---
+        function selectSize(size) {
+            state.size = size;
+            document.querySelectorAll('.size-btn').forEach(btn => {
+                if (btn.dataset.size === size) {
+                    btn.className = 'size-btn py-2.5 rounded-xl border-2 border-slate-900 dark:border-white bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold transition';
+                } else {
+                    btn.className = 'size-btn py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-500 transition';
+                }
+            });
+            updatePrice();
+            renderCanvas();
+        }
+
+        function changeQuantity(delta) {
+            const newQty = state.quantity + delta;
+            if (newQty >= 1 && newQty <= 500) {
+                state.quantity = newQty;
+                document.getElementById('quantity-display').textContent = state.quantity;
+                updatePrice();
+            }
+        }
+
+        function calculatePricingDetails() {
+            const hasFront = Boolean(state.designs.front);
+            const hasBack = Boolean(state.designs.back);
+            const printUnitCost = storeConfig.printPricePerSide || 0;
+
+            let printsCost = 0;
+            let sidesCount = 0;
+            let sidesDescription = 'Sin estampa cargada';
+
+            if (hasFront && hasBack) {
+                sidesCount = 2;
+                printsCost = printUnitCost * 2;
+                sidesDescription = 'Estampa Frente + Espalda';
+            } else if (hasFront) {
+                sidesCount = 1;
+                printsCost = printUnitCost;
+                sidesDescription = 'Estampa en Frente';
+            } else if (hasBack) {
+                sidesCount = 1;
+                printsCost = printUnitCost;
+                sidesDescription = 'Estampa en Espalda';
+            }
+
+            // Recargo por talles grandes (XL / XXL)
+            const isLargeSize = state.size === 'XL' || state.size === 'XXL';
+            const sizeExtra = isLargeSize ? (storeConfig.xlSurcharge || 0) : 0;
+
+            const unitPriceRaw = storeConfig.baseShirt + sizeExtra + printsCost;
+
+            // Evaluar descuentos escalonados configurados por el dueño
+            let discountPct = 0;
+            if (storeConfig.discountTier2Pct > 0 && state.quantity >= storeConfig.discountTier2Qty) {
+                discountPct = storeConfig.discountTier2Pct;
+            } else if (storeConfig.discountTier1Pct > 0 && state.quantity >= storeConfig.discountTier1Qty) {
+                discountPct = storeConfig.discountTier1Pct;
+            }
+
+            const multiplier = (100 - discountPct) / 100;
+            const unitPriceFinal = Math.round(unitPriceRaw * multiplier);
+            const total = unitPriceFinal * state.quantity;
+
+            return {
+                unitPrice: unitPriceFinal,
+                total,
+                sidesCount,
+                sidesDescription,
+                sizeExtra,
+                discountPct
+            };
+        }
+
+        function formatARS(amount) {
+            return '$' + Number(amount).toLocaleString('es-AR');
+        }
+
+        function updatePrice() {
+            const pricing = calculatePricingDetails();
+            document.getElementById('total-price').textContent = formatARS(pricing.total);
+
+            let breakdownText = `${formatARS(pricing.unitPrice)} c/u · ${pricing.sidesDescription}`;
+            if (pricing.sizeExtra > 0) {
+                breakdownText += ` · Talle ${state.size}`;
+            }
+            if (pricing.discountPct > 0) {
+                breakdownText += ` (${pricing.discountPct}% OFF)`;
+            }
+            document.getElementById('price-breakdown').textContent = breakdownText;
+        }
+
+        // --- EXPORTACIÓN Y FLUJO DIRECTO A WHATSAPP ---
+        function generateCompositeMockupDataURL() {
+            // Crea un canvas temporal limpio que muestra Frente y Espalda lado a lado si ambos tienen diseño, o la vista activa
+            const hasFront = Boolean(state.designs.front);
+            const hasBack = Boolean(state.designs.back);
+            const showBoth = hasFront && hasBack;
+
+            const exportCanvas = document.createElement('canvas');
+            const eCtx = exportCanvas.getContext('2d');
+            const originalSide = state.side;
+
+            if (showBoth) {
+                exportCanvas.width = 1200;
+                exportCanvas.height = 680;
+                eCtx.fillStyle = '#f8fafc';
+                eCtx.fillRect(0, 0, 1200, 680);
+
+                // Dibujar Frente a la izquierda
+                state.side = 'front';
+                renderCanvas(eCtx, 600, 650, true);
+
+                // Dibujar Espalda a la derecha
+                eCtx.save();
+                eCtx.translate(600, 0);
+                state.side = 'back';
+                renderCanvas(eCtx, 600, 650, true);
+                eCtx.restore();
+
+                // Etiquetas inferiores
+                eCtx.fillStyle = '#475569';
+                eCtx.font = 'bold 16px Inter, sans-serif';
+                eCtx.textAlign = 'center';
+                eCtx.fillText('FRENTE', 300, 655);
+                eCtx.fillText('ESPALDA', 900, 655);
+            } else {
+                exportCanvas.width = 650;
+                exportCanvas.height = 680;
+                eCtx.fillStyle = '#f8fafc';
+                eCtx.fillRect(0, 0, 650, 680);
+                renderCanvas(eCtx, 650, 650, true);
+
+                eCtx.fillStyle = '#475569';
+                eCtx.font = 'bold 15px Inter, sans-serif';
+                eCtx.textAlign = 'center';
+                eCtx.fillText(originalSide === 'front' ? 'VISTA FRONTAL' : 'VISTA ESPALDA', 325, 658);
+            }
+
+            // Restaurar estado original
+            state.side = originalSide;
+            renderCanvas();
+
+            return exportCanvas.toDataURL('image/png');
+        }
+
+        function downloadMockup() {
+            const dataUrl = generateCompositeMockupDataURL();
+            const link = document.createElement('a');
+            link.download = `Remera-Personalizada-${state.colorName.replace(/\s+/g, '-')}-Talle-${state.size}.png`;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Vista previa descargada en tu dispositivo');
+        }
+
+        function buildOrderSummaryText() {
+            const pricing = calculatePricingDetails();
+            const brand = storeConfig.brandName || 'Tinta & Tela';
+
+            // Detallar lados, escala y ubicación
+            const ubicaciones = [];
+            if (state.designs.front) {
+                const pctF = Math.round(state.designs.front.scale * 100);
+                ubicaciones.push(`Frente (escala ${pctF}%)`);
+            }
+            if (state.designs.back) {
+                const pctB = Math.round(state.designs.back.scale * 100);
+                ubicaciones.push(`Espalda (escala ${pctB}%)`);
+            }
+            const ubicacionText = ubicaciones.length > 0 ? ubicaciones.join(' + ') : 'Sin diseño cargado aún';
+
+            let msg = `¡Hola *${brand}*! Quiero encargar mi remera personalizada:\n\n` +
+                      `👕 *Prenda:* Remera Algodón 24/1\n` +
+                      `🎨 *Color:* ${state.colorName} (${state.colorHex.toUpperCase()})\n` +
+                      `📏 *Talle:* ${state.size}\n` +
+                      `📍 *Estampado:* ${ubicacionText}\n` +
+                      `🔢 *Cantidad:* ${state.quantity} unidad(es)\n` +
+                      `💰 *Total Estimado:* ${formatARS(pricing.total)} ARS`;
+
+            if (pricing.discountPct > 0) {
+                msg += ` _(incluye ${pricing.discountPct}% OFF por cantidad)_`;
+            }
+
+            msg += `\n\nTe adjunto la imagen/muestra de mi diseño acá abajo 👇`;
+            return msg;
+        }
+
+        function directOrderToWhatsApp() {
+            // Si el cliente subió al menos un diseño, descargamos automáticamente la muestra para que la tenga lista para adjuntar
+            if (state.designs.front || state.designs.back) {
+                downloadMockup();
+            }
+
+            // Verificar si el dueño configuró un número de WhatsApp válido
+            if (!isValidWhatsAppNumber(storeConfig.whatsappNumber)) {
+                const modal = document.getElementById('wa-alert-modal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                return;
+            }
+
+            const cleanPhone = String(storeConfig.whatsappNumber).replace(/\D/g, '');
+            const encodedText = encodeURIComponent(buildOrderSummaryText());
+            const waUrl = `https://wa.me/${cleanPhone}?text=${encodedText}`;
+
+            window.open(waUrl, '_blank');
+        }
+
+        function openWhatsAppGenericShare() {
+            const encodedText = encodeURIComponent(buildOrderSummaryText());
+            window.open(`https://api.whatsapp.com/send?text=${encodedText}`, '_blank');
+        }
+
+        function closeWaAlertModal() {
+            const modal = document.getElementById('wa-alert-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // --- MODALES AUXILIARES Y UTILIDADES ---
+        function openSizeGuide() {
+            const modal = document.getElementById('size-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeSizeGuide() {
+            const modal = document.getElementById('size-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function isColorDark(hex) {
+            const cleanHex = hex.replace('#', '');
+            const r = parseInt(cleanHex.substring(0, 2), 16);
+            const g = parseInt(cleanHex.substring(2, 4), 16);
+            const b = parseInt(cleanHex.substring(4, 6), 16);
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            return brightness < 128;
+        }
+
+        let toastTimeout;
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Arrancar aplicación al cargar
+        window.onload = init;
+    </script>
+</body>
+</html>
